@@ -27,9 +27,9 @@ const About = () => {
   ];
 
   const team = [
-    { name: 'Dr. Sarah Mitchell', role: 'Founder & Director', bio: 'PhD in Education, 15+ years experience in academic leadership' },
-    { name: 'James Wilson', role: 'Head of Science', bio: 'Former research scientist, expert in Chemistry and Physics' },
-    { name: 'Emily Chen', role: 'Head of Mathematics', bio: 'Award-winning educator, specializes in advanced mathematics' },
+    { name: 'JOSEPH AMONOO', role: 'Founder', bio: 'Visionary leader driving academic excellence through innovative education' },
+    { name: 'Simon Azike', role: 'Co-Founder', bio: 'Dedicated to transforming learning experiences for students worldwide' },
+    { name: 'DAMILARE OLADIMEJI', role: 'Team Lead', bio: 'Committed to delivering quality education and student success' }
   ];
 
   return (

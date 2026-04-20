@@ -23,70 +23,7 @@ const Lecturers = () => {
     }
   };
 
-  const defaultInstructors = [
-    {
-      _id: '1',
-      name: 'Dr. Sarah Mitchell',
-      email: 'sarah@joeacademy.com',
-      title: 'Chemistry Expert',
-      bio: 'PhD in Chemistry with 12 years of teaching experience. Specializes in organic chemistry and exam preparation.',
-      expertise: ['Chemistry', 'Organic Chemistry', 'Exam Prep'],
-      rating: 4.9,
-      students: 450
-    },
-    {
-      _id: '2',
-      name: 'James Wilson',
-      email: 'james@joeacademy.com',
-      title: 'Mathematics Specialist',
-      bio: 'Award-winning mathematics educator with expertise in calculus, statistics, and standardized test preparation.',
-      expertise: ['Mathematics', 'Calculus', 'SAT/ACT Prep'],
-      rating: 4.8,
-      students: 520
-    },
-    {
-      _id: '3',
-      name: 'Emily Chen',
-      email: 'emily@joeacademy.com',
-      title: 'Physics Professor',
-      bio: 'Former research scientist with a passion for making physics accessible and engaging for students of all levels.',
-      expertise: ['Physics', 'Mechanics', 'Electronics'],
-      rating: 4.9,
-      students: 380
-    },
-    {
-      _id: '4',
-      name: 'Dr. Michael Osei',
-      email: 'michael@joeacademy.com',
-      title: 'Biology Instructor',
-      bio: 'Molecular biologist turned educator, specializing in genetics, cell biology, and medical school preparation.',
-      expertise: ['Biology', 'Genetics', 'MCAT Prep'],
-      rating: 4.7,
-      students: 290
-    },
-    {
-      _id: '5',
-      name: 'Sophie Martin',
-      email: 'sophie@joeacademy.com',
-      title: 'French Language Expert',
-      bio: 'Native French speaker with teaching certification. Helps students achieve fluency through immersive methods.',
-      expertise: ['French', 'DELF/DALF Prep', 'Conversation'],
-      rating: 5.0,
-      students: 340
-    },
-    {
-      _id: '6',
-      name: 'David Thompson',
-      email: 'david@joeacademy.com',
-      title: 'English Literature',
-      bio: 'Published author and experienced English teacher helping students master writing, literature, and communication.',
-      expertise: ['English', 'Essay Writing', 'Literature'],
-      rating: 4.8,
-      students: 410
-    }
-  ];
-
-  const displayInstructors = instructors.length > 0 ? instructors : defaultInstructors;
+  const displayInstructors = instructors;
 
   return (
     <div className="font-sans">
