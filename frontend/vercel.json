@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://joe-academy.onrender.com/api/$1" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
