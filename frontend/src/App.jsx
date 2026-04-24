@@ -14,6 +14,7 @@ import Contact from './pages/Contact';
 import Lecturers from './pages/Lecturers';
 import Checkout from './pages/Checkout';
 import CheckoutSuccess from './pages/CheckoutSuccess';
+import BookNow from './pages/BookNow';
 
 function App() {
   return (
@@ -55,6 +56,7 @@ function App() {
             } 
           />
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
+          <Route path="/book-now" element={<BookNow />} />
         </Routes>
       </main>
     </div>

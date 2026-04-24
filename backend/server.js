@@ -1,4 +1,4 @@
-require('dotenv').config();
+vrequire('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -32,6 +32,9 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+
+// Google Form webhook - receives submissions from Google Apps Script
+app.post('/api/webhooks/google-form', require('./controllers/bookingController').googleFormWebhook);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'LearnHub API is running' });

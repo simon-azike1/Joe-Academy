@@ -22,11 +22,12 @@ const InstructorLayout = ({ children }) => {
   }, []);
 
    const navItems = [
-     { path: '/instructor', icon: BookOpen, label: 'My Courses', end: true },
-     { path: '/instructor/orders', icon: CheckCircle, label: 'Orders' },
-     { path: '/instructor/bookings', icon: Calendar, label: 'Bookings' },
-     { path: '/instructor/create', icon: Plus, label: 'Create Course' },
-   ];
+      { path: '/instructor', icon: BookOpen, label: 'My Courses', end: true },
+      { path: '/instructor/orders', icon: CheckCircle, label: 'Orders' },
+      { path: '/instructor/bookings', icon: Calendar, label: 'Bookings' },
+      { path: '/instructor/google-form', icon: MessageCircle, label: 'Form Responses', end: false },
+      { path: '/instructor/create', icon: Plus, label: 'Create Course' },
+    ];
 
   const isActive = (path, end) => {
     if (end) return location.pathname === path;
@@ -70,7 +71,7 @@ const InstructorLayout = ({ children }) => {
           {/* Header */}
           <div className="p-3 flex items-center border-b border-white/10 bg-[#14293a]">
             <button 
-              onClick={() => isMobile ? closeSidebar : setSidebarOpen(!sidebarOpen)}
+              onClick={() => isMobile ? closeSidebar() : setSidebarOpen(!sidebarOpen)}
               className="p-2 text-gray-300 hover:text-amber-500 transition-colors"
             >
               {isMobile ? <X className="w-5 h-5" /> : (sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />)}
@@ -109,9 +110,9 @@ const InstructorLayout = ({ children }) => {
                   <p className="text-gray-400 text-xs">Revenue</p>
                 </div>
                 <div className="bg-white/5 p-3 text-center">
-                  <Users className="w-5 h-5 text-amber-500 mx-auto mb-1" />
+                  <MessageCircle className="w-5 h-5 text-amber-500 mx-auto mb-1" />
                   <p className="text-white font-bold text-lg">0</p>
-                  <p className="text-gray-400 text-xs">Students</p>
+                  <p className="text-gray-400 text-xs">Form Responses</p>
                 </div>
               </div>
             </div>
@@ -129,10 +130,19 @@ const InstructorLayout = ({ children }) => {
                     : 'text-gray-300 hover:bg-white/5 hover:text-white'
                 }`}
                 end={item.end ? "true" : undefined}
-                onClick={isMobile ? closeSidebar : undefined}
+                onClick={isMobile ? () => closeSidebar() : undefined}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
-                {(sidebarOpen || isMobile) && <span className="font-medium text-sm">{item.label}</span>}
+                {(sidebarOpen || isMobile) && (
+                  <>
+                    <span className="font-medium text-sm">{item.label}</span>
+                    {item.path === '/instructor/google-form' && (
+                      <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                        New
+                      </span>
+                    )}
+                    </>
+                  )}
               </Link>
             ))}
           </nav>
@@ -527,37 +537,13 @@ const CreateCourse = () => {
               <p className="text-xs text-gray-500 mt-1">
                 Required for WhatsApp payments. Students will send payment to this number.
               </p>
-           </div>
+            </div>
 
-           <div>
-             <label className="block text-sm font-bold text-[#1A2D44] mb-2 uppercase tracking-wide">
-               Lecturer WhatsApp Number
-             </label>
-             <div className="flex items-center gap-3">
-               <div className="relative flex-1">
-                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                   <Phone className="w-5 h-5 text-gray-400" />
-                 </div>
-                 <input
-                   type="tel"
-                   name="lecturerWhatsApp"
-                   value={formData.lecturerWhatsApp || ''}
-                   onChange={handleChange}
-                   className="w-full pl-10 pr-4 py-3 border border-gray-200 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                   placeholder="+1234567890 (include country code)"
-                 />
-               </div>
-             </div>
-             <p className="text-xs text-gray-500 mt-1">
-               Required for WhatsApp payments. Students will send payment to this number.
-             </p>
-           </div>
-
-           <div>
-             <label className="block text-sm font-bold text-[#1A2D44] mb-2 uppercase tracking-wide">
-               Full Description *
-             </label>
-            <textarea
+            <div>
+              <label className="block text-sm font-bold text-[#1A2D44] mb-2 uppercase tracking-wide">
+                Full Description *
+              </label>
+             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
@@ -1125,6 +1111,192 @@ const InstructorBookings = () => {
    );
  };
 
+const GoogleFormResponses = () => {
+  const [responses, setResponses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    fetchResponses();
+  }, []);
+
+  const fetchResponses = async () => {
+    try {
+      const response = await axios.get('/api/bookings/google-form/responses');
+      setResponses(response.data.responses || []);
+    } catch (error) {
+      console.error('Error fetching responses:', error);
+      toast.error('Failed to load form responses');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateBooking = async (response) => {
+    try {
+      await axios.post('/api/bookings/google-form', {
+        ...response,
+        sessionType: response.sessionType || 'virtual',
+        frequency: response.frequency || 'one-time'
+      });
+      toast.success('Booking created from form response!');
+      fetchResponses();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to create booking');
+    }
+  };
+
+  const filteredResponses = responses.filter(r => {
+    if (filter === 'all') return true;
+    if (filter === 'pending') return !r.processed;
+    if (filter === 'processed') return r.processed;
+    return true;
+  });
+
+  const getStatusColor = (processed) => {
+    return processed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+  };
+
+  const getStatusText = (processed) => {
+    return processed ? 'Processed' : 'Pending';
+  };
+
+  return (
+    <div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <h1 className="text-2xl md:text-3xl font-black text-[#1A2D44]">Google Form Responses</h1>
+        <p className="text-gray-500 mt-2">Manage form submissions and create bookings</p>
+      </motion.div>
+
+      <div className="flex flex-wrap gap-2 mb-6">
+        <button
+          onClick={() => setFilter('all')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            filter === 'all'
+              ? 'bg-amber-500 text-[#1A2D44]'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          All ({responses.length})
+        </button>
+        <button
+          onClick={() => setFilter('pending')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            filter === 'pending'
+              ? 'bg-amber-500 text-[#1A2D44]'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          Pending ({responses.filter(r => !r.processed).length})
+        </button>
+        <button
+          onClick={() => setFilter('processed')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            filter === 'processed'
+              ? 'bg-amber-500 text-[#1A2D44]'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          Processed ({responses.filter(r => r.processed).length})
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="border border-gray-200 h-24 animate-pulse bg-white"></div>
+          ))}
+        </div>
+      ) : filteredResponses.length > 0 ? (
+        <div className="space-y-4">
+          {filteredResponses.map((response, index) => (
+            <motion.div
+              key={response._id || index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="border border-gray-200 bg-white p-6 hover:shadow-lg transition-all duration-300"
+            >
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-start gap-4 mb-3">
+                    <div className="w-12 h-12 bg-[#1A2D44] rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-bold text-amber-500">
+                        {response.name?.charAt(0).toUpperCase() || '?'}</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-[#1A2D44]">{response.name || 'Unknown'}</h3>
+                      <p className="text-sm text-gray-500">{response.email || 'No email'}</p>
+                      <p className="text-sm text-gray-500">{response.phone || 'No phone'}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-400">Subject:</span>
+                      <span className="ml-2 font-medium text-[#1A2D44]">{response.subject || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Session:</span>
+                      <span className="ml-2 font-medium text-[#1A2D44]">{response.sessionType === 'home-service' ? 'Home Service' : 'Virtual'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Date:</span>
+                      <span className="ml-2 font-medium">{response.date ? new Date(response.date).toLocaleDateString() : 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Time:</span>
+                      <span className="ml-2 font-medium">{response.time || 'N/A'}</span>
+                    </div>
+                  </div>
+                  {response.notes && (
+                    <p className="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                      <span className="text-gray-400">Notes:</span> {response.notes}
+                    </p>
+                  )}
+                  {response.address && response.sessionType === 'home-service' && (
+                    <p className="mt-2 text-sm text-gray-600">
+                      <span className="text-gray-400">Address:</span> {response.address}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(response.processed)}`}>
+                    {getStatusText(response.processed)}
+                  </span>
+                  {!response.processed && (
+                    <button
+                      onClick={() => handleCreateBooking(response)}
+                      className="bg-amber-500 text-[#1A2D44] px-4 py-2 font-bold text-sm hover:bg-amber-400 transition-colors whitespace-nowrap"
+                    >
+                      Create Booking
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-20 bg-white border border-gray-200"
+        >
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <MessageCircle className="w-10 h-10 text-gray-400" />
+          </div>
+          <h3 className="text-xl font-bold text-[#1A2D44] mb-2">No form responses</h3>
+          <p className="text-gray-500">No Google Form submissions yet</p>
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
 const InstructorOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1151,7 +1323,6 @@ const InstructorOrders = () => {
     try {
       await axios.post(`/api/purchase/confirm-manual/${orderId}`);
       toast.success('Payment confirmed! Student now has access.');
-      // Remove from local state
       setOrders(orders.filter(o => o._id !== orderId));
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to confirm payment');
@@ -1256,13 +1427,14 @@ const InstructorOrders = () => {
 const InstructorDashboard = () => {
   return (
     <InstructorLayout>
-      <Routes>
-        <Route index element={<InstructorCourses />} />
-        <Route path="create" element={<CreateCourse />} />
-        <Route path="edit/:id" element={<EditCourse />} />
-        <Route path="orders" element={<InstructorOrders />} />
-        <Route path="bookings" element={<InstructorBookings />} />
-      </Routes>
+       <Routes>
+         <Route index element={<InstructorCourses />} />
+         <Route path="create" element={<CreateCourse />} />
+         <Route path="edit/:id" element={<EditCourse />} />
+         <Route path="orders" element={<InstructorOrders />} />
+         <Route path="bookings" element={<InstructorBookings />} />
+         <Route path="google-form" element={<GoogleFormResponses />} />
+       </Routes>
     </InstructorLayout>
   );
 };

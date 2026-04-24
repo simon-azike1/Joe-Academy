@@ -49,7 +49,17 @@ const Navbar = () => {
               Lecturers
             </Link>
             <Link 
-              to="/about" 
+              to="/book-now" 
+              className={`px-4 py-2 text-sm font-bold uppercase tracking-wide transition-colors ${
+                isActive('/book-now') 
+                  ? 'text-amber-500' 
+                  : 'text-[#1A2D44] hover:text-amber-500'
+              }`}
+            >
+              Book a Session
+            </Link>
+            <Link 
+              to="/about"
               className={`px-4 py-2 text-sm font-bold uppercase tracking-wide transition-colors ${
                 isActive('/about') 
                   ? 'text-amber-500' 
@@ -178,7 +188,18 @@ const Navbar = () => {
               Lecturers
             </Link>
             <Link 
-              to="/about" 
+              to="/book-now" 
+              className={`block py-3 px-4 text-sm font-bold uppercase tracking-wide ${
+                isActive('/book-now') 
+                  ? 'text-amber-500' 
+                  : 'text-[#1A2D44]'
+              }`}
+              onClick={closeMobileMenu}
+            >
+              Book a Session
+            </Link>
+            <Link 
+              to="/about"
               className={`block py-3 px-4 text-sm font-bold uppercase tracking-wide ${
                 isActive('/about') 
                   ? 'text-amber-500' 
