@@ -63,14 +63,15 @@ const Checkout = () => {
   };
 
   const handleWhatsAppPayment = async () => {
+    if (processing) return;
     setProcessing(true);
     try {
-      const response = await axios.post('/api/purchase/whatsapp-order', { courseId: id });
+      const { data } = await axios.post('/api/purchase/whatsapp-order', { courseId: id });
 
-      if (response.data.success) {
+      if (data.success) {
         toast.success(
           <div>
-            <div className="font-bold">Order Placed!</div>
+            <div className="font-bold">{data.isNewOrder ? 'Order Placed!' : 'Order Already Exists'}</div>
             <div className="text-sm">Check your WhatsApp for payment instructions.</div>
           </div>,
           { icon: '📱', duration: 6000 }
@@ -79,6 +80,9 @@ const Checkout = () => {
         setTimeout(() => {
           navigate('/dashboard/courses');
         }, 2000);
+      } else {
+        toast.error(data.error || 'Failed to create order');
+        setProcessing(false);
       }
     } catch (error) {
       toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Failed to create order');

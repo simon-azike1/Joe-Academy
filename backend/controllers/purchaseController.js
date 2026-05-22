@@ -405,11 +405,12 @@ exports.createWhatsAppOrder = async (req, res) => {
       success: true,
       purchase: populatedPurchase,
       message: 'Order placed! Check your WhatsApp for instructions.',
-      manualPaymentReference: purchase.manualPaymentReference
+      manualPaymentReference: purchase.manualPaymentReference,
+      isNewOrder
     });
   } catch (error) {
     console.error('[WhatsApp] Error creating order:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message || 'Failed to create order' });
   }
 };
 
