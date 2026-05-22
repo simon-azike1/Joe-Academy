@@ -57,7 +57,7 @@ const Checkout = () => {
         navigate('/dashboard/courses');
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Enrollment failed');
+      toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Enrollment failed');
       setProcessing(false);
     }
   };
@@ -81,7 +81,7 @@ const Checkout = () => {
         }, 2000);
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to create order');
+      toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Failed to create order');
       setProcessing(false);
     }
   };

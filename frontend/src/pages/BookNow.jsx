@@ -374,7 +374,7 @@ const BookNow = () => {
       toast.success('Booking request submitted successfully!');
       navigate('/dashboard/bookings');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Booking failed');
+      toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Booking failed');
     } finally { setSubmitting(false); }
   };
 

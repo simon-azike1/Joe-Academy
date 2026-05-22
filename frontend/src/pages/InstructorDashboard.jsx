@@ -400,7 +400,7 @@ const CreateCourse = () => {
       toast.success('Course created!');
       navigate(`/instructor/edit/${response.data.course._id}`);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to create course');
+      toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Failed to create course');
     } finally {
       setSaving(false);
     }
@@ -639,7 +639,7 @@ const EditCourse = () => {
       await axios.put(`/api/courses/${id}`, formData);
       toast.success('Course updated!');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to update course');
+      toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Failed to update course');
     } finally {
       setSaving(false);
     }
@@ -826,7 +826,7 @@ const LectureForm = ({ courseId, onComplete }) => {
       toast.success('Lecture added!');
       onComplete();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to add lecture');
+      toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Failed to add lecture');
     } finally {
       setSaving(false);
     }
@@ -940,7 +940,7 @@ const LectureList = ({ courseId }) => {
       setShowForm(false);
       fetchLectures();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to add lecture');
+      toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Failed to add lecture');
     } finally {
       setSaving(false);
     }
@@ -1154,7 +1154,7 @@ const InstructorOrders = () => {
       // Remove from local state
       setOrders(orders.filter(o => o._id !== orderId));
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to confirm payment');
+      toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Failed to confirm payment');
     } finally {
       setConfirmingId(null);
     }

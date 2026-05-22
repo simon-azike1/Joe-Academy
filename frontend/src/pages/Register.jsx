@@ -37,7 +37,7 @@ const Register = () => {
         navigate('/dashboard');
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Registration failed');
+      toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Registration failed');
     } finally {
       setLoading(false);
     }

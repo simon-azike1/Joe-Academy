@@ -55,7 +55,7 @@ const CourseDetail = () => {
           navigate('/dashboard/courses');
         }
       } catch (error) {
-        toast.error(error.response?.data?.error || 'Enrollment failed');
+        toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Enrollment failed');
         setPurchasing(false);
       }
       return;

@@ -32,7 +32,7 @@ const Login = () => {
       toast.success(`Welcome back, ${user.name}!`);
       navigate(user.role === 'instructor' || user.role === 'admin' ? '/instructor' : from);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Login failed');
+      toast.error(error.response?.data?.error ? String(error.response.data.error) : 'Login failed');
     } finally {
       setLoading(false);
     }
