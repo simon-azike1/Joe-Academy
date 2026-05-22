@@ -68,6 +68,12 @@ const Navbar = () => {
             >
               Contact
             </Link>
+            <Link 
+              to="/book-now" 
+              className="px-4 py-2 bg-amber-500 text-[#1A2D44] text-sm font-bold uppercase tracking-wide hover:bg-amber-400 transition-colors"
+            >
+              Book Now
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-3">
@@ -188,17 +194,24 @@ const Navbar = () => {
             >
               About
             </Link>
-            <Link 
-              to="/contact" 
-              className={`block py-3 px-4 text-sm font-bold uppercase tracking-wide ${
-                isActive('/contact') 
-                  ? 'text-amber-500' 
-                  : 'text-[#1A2D44]'
-              }`}
-              onClick={closeMobileMenu}
-            >
-              Contact
-            </Link>
+              <Link 
+                to="/contact" 
+                className={`block py-3 px-4 text-sm font-bold uppercase tracking-wide ${
+                  isActive('/contact') 
+                    ? 'text-amber-500' 
+                    : 'text-[#1A2D44]'
+                }`}
+                onClick={closeMobileMenu}
+              >
+                Contact
+              </Link>
+              <Link 
+                to="/book-now" 
+                className="block py-3 px-4 bg-amber-500 text-[#1A2D44] text-sm font-bold uppercase tracking-wide text-center hover:bg-amber-400"
+                onClick={closeMobileMenu}
+              >
+                Book Now
+              </Link>
 
             {isAuthenticated ? (
               <div className="pt-3 border-t border-gray-200">
