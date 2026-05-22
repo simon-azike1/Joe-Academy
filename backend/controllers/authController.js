@@ -1,6 +1,15 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+/**
+ * Normalize a phone number to E.164 by stripping spaces/dashes/hyphens/parens.
+ *   "+212 751-780853" → "+212751780853"
+ */
+const normalizePhone = (raw) => {
+  if (!raw) return '';
+  return String(raw).replace(/[\s\-\(\)\.]/g, '');
+};
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '7d'
@@ -21,7 +30,7 @@ exports.register = async (req, res) => {
       email,
       password,
       role: role || 'student',
-      phone: phone || ''
+      phone: normalizePhone(phone)
     });
 
     const token = generateToken(user._id);
@@ -102,7 +111,7 @@ exports.updateProfile = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { name, email, bio, title, avatar, phone },
+      { name, email, bio, title, avatar, phone: normalizePhone(phone) },
       { new: true, runValidators: true }
     );
 

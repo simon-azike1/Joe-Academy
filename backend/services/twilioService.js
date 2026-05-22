@@ -1,5 +1,14 @@
 const twilio = require('twilio');
 
+/**
+ * Normalize a phone number to E.164 (strip spaces, dashes, parens, dots).
+ *   "+212 751-780853" → "+212751780853"
+ */
+const normalizePhone = (raw) => {
+  if (!raw) return '';
+  return String(raw).replace(/[\s\-\(\)\.]/g, '');
+};
+
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const whatsappFromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
@@ -59,8 +68,8 @@ Link: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/instructor/orders
       throw new Error('No WhatsApp number configured for lecturer');
     }
 
-    // Ensure number has whatsapp: prefix but not duplicated
-    let instructorWhatsApp = rawInstructorWhatsApp;
+    // Ensure number has whatsapp: prefix & is E.164 normalised
+    let instructorWhatsApp = normalizePhone(rawInstructorWhatsApp);
     if (!instructorWhatsApp.startsWith('whatsapp:')) {
       instructorWhatsApp = `whatsapp:${instructorWhatsApp}`;
     }
@@ -110,8 +119,8 @@ Once payment is confirmed, you'll get instant access to the course.
 📞 *Order ID:* ${order.manualPaymentReference}
     `.trim();
 
-    // Ensure numbers have whatsapp: prefix but not duplicated
-    let studentWhatsAppFormatted = studentWhatsApp;
+    // Ensure numbers have whatsapp: prefix & are E.164 normalised
+    let studentWhatsAppFormatted = normalizePhone(studentWhatsApp);
     if (!studentWhatsAppFormatted.startsWith('whatsapp:')) {
       studentWhatsAppFormatted = `whatsapp:${studentWhatsAppFormatted}`;
     }
@@ -137,4 +146,97 @@ Once payment is confirmed, you'll get instant access to the course.
 module.exports = {
   sendOrderNotification: exports.sendOrderNotification,
   sendStudentNotification: exports.sendStudentNotification
+};
+
+/**
+ * Send WhatsApp notification to instructor about a new booking
+ * @param {Object} booking - Booking document (populated or partial)
+ */
+exports.sendBookingNotification = async (booking) => {
+  if (!client) {
+    console.warn('[Twilio] Client not initialized. Skipping booking WhatsApp message.');
+    return { skipped: true, reason: 'Twilio not configured' };
+  }
+
+  try {
+    const instructorWhatsApp = normalizePhone(
+      booking?.instructorWhatsApp
+      || booking?.instructor?.whatsapp
+      || process.env.LECTURER_WHATSAPP_FALLBACK
+    );
+    if (!instructorWhatsApp) {
+      throw new Error('No WhatsApp number configured for instructor');
+    }
+
+    const message = `
+📚 *New Booking Request*
+
+👤 *Student:* ${booking.studentName || 'Unknown'}
+📧 *Email:* ${booking.studentEmail || 'N/A'}
+📱 *Phone:* ${booking.studentPhone || 'N/A'}
+🧾 *Subject:* ${booking.subject || 'N/A'}
+🗓️ *Date:* ${booking.date ? new Date(booking.date).toLocaleDateString() : 'N/A'}
+⏰ *Time:* ${booking.time || 'N/A'}
+⏱️ *Duration:* ${Math.round((booking.duration || 60) / 60)}h
+💵 *Fee:* ${booking.totalFee || booking.price || 'N/A'} DHS
+
+Please confirm or manage this booking in your instructor dashboard:
+${process.env.FRONTEND_URL || 'http://localhost:3000'}/instructor/bookings
+    `.trim();
+
+    let to = instructorWhatsApp;
+    if (!to.startsWith('whatsapp:')) to = `whatsapp:${to}`;
+    let from = normalizePhone(whatsappFromNumber);
+    if (!from.startsWith('whatsapp:')) from = `whatsapp:${from}`;
+
+    const result = await client.messages.create({ from, to, body: message });
+    console.log(`[Twilio] Booking WhatsApp sent: ${result.sid}`);
+    return { success: true, messageSid: result.sid };
+  } catch (error) {
+    console.error('[Twilio] Error sending booking WhatsApp message:', error.message || error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send WhatsApp notification to student acknowledging their booking
+ * @param {string} studentWhatsApp
+ * @param {Object} booking
+ */
+exports.sendStudentBookingNotification = async (studentWhatsApp, booking) => {
+  if (!client || !studentWhatsApp) {
+    console.warn('[Twilio] Client not initialized or no student WhatsApp. Skipping message.');
+    return { skipped: true };
+  }
+
+  try {
+    let to = normalizePhone(studentWhatsApp);
+    if (!to.startsWith('whatsapp:')) to = `whatsapp:${to}`;
+    let from = normalizePhone(whatsappFromNumber);
+    if (!from.startsWith('whatsapp:')) from = `whatsapp:${from}`;
+
+    const message = `
+✅ *Booking Received!*
+
+Hi ${booking.studentName || ''}, your booking request for *${booking.subject || 'a session'}* has been received.
+Your preferred date: ${booking.date ? new Date(booking.date).toLocaleDateString() : 'N/A'} at ${booking.time || 'N/A'}.
+An instructor will contact you shortly to confirm the session and payment.
+
+Manage: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/bookings
+    `.trim();
+
+    const result = await client.messages.create({ from, to, body: message });
+    console.log(`[Twilio] Student booking WhatsApp sent: ${result.sid}`);
+    return { success: true, messageSid: result.sid };
+  } catch (error) {
+    console.error('[Twilio] Error sending student booking WhatsApp:', error.message || error);
+    return { success: false, error: error.message };
+  }
+};
+
+module.exports = {
+  sendOrderNotification: exports.sendOrderNotification,
+  sendStudentNotification: exports.sendStudentNotification,
+  sendBookingNotification: exports.sendBookingNotification,
+  sendStudentBookingNotification: exports.sendStudentBookingNotification
 };
