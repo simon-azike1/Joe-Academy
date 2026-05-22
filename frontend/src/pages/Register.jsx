@@ -29,6 +29,20 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!formData.name.trim()) {
+      toast.error('Full name is required');
+      return;
+    }
+    if (!formData.email.trim()) {
+      toast.error('Email is required');
+      return;
+    }
+    if (!formData.password.trim()) {
+      toast.error('Password is required');
+      return;
+    }
+    
     // If registering as instructor, show terms modal first
     if (formData.role === 'instructor') {
       setPendingFormData(formData);
@@ -146,7 +160,7 @@ const Register = () => {
           </div>
 
           <div className="bg-white border border-gray-200 p-8">
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Full Name
