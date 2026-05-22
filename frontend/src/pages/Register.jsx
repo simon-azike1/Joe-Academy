@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import TermsModal from '../components/TermsModal';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, GraduationCap, Eye, EyeOff, ArrowRight, BookOpen, Users, Award, Globe, Phone } from 'lucide-react';
@@ -18,6 +19,8 @@ const Register = () => {
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,13 +28,26 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // If registering as instructor, show terms modal first
+    if (formData.role === 'instructor') {
+      setPendingFormData(formData);
+      setShowTermsModal(true);
+      return;
+    }
+
+    // For students, proceed directly
+    await completeRegistration(formData);
+  };
+
+  const completeRegistration = async (data) => {
     setLoading(true);
 
     try {
-      const user = await register(formData.name, formData.email, formData.password, formData.role);
+      const user = await register(data.name, data.email, data.password, data.role);
       toast.success('Account created successfully!');
       
-      if (formData.role === 'instructor') {
+      if (data.role === 'instructor') {
         navigate('/instructor');
       } else {
         navigate('/dashboard');
@@ -41,6 +57,19 @@ const Register = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTermsAgree = async () => {
+    setShowTermsModal(false);
+    if (pendingFormData) {
+      await completeRegistration(pendingFormData);
+      setPendingFormData(null);
+    }
+  };
+
+  const handleTermsDecline = () => {
+    setShowTermsModal(false);
+    setPendingFormData(null);
   };
 
   const features = [
@@ -266,6 +295,13 @@ const Register = () => {
           </p>
         </motion.div>
       </div>
+
+      {/* Terms Modal */}
+      <TermsModal 
+        isOpen={showTermsModal} 
+        onAgree={handleTermsAgree}
+        onClose={handleTermsDecline}
+      />
     </div>
   );
 };
