@@ -33,7 +33,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-// Google Form webhook - receives submissions from Google Apps Script
+// Google Form webhook — receives submissions from Google Apps Script
 app.post('/api/webhooks/google-form', require('./controllers/bookingController').googleFormWebhook);
 
 app.get('/api/health', (req, res) => {

@@ -18,18 +18,18 @@ const About = () => {
   ];
 
   const subjects = [
-    { icon: FlaskConical, name: 'Chemistry' },
-    { icon: Calculator, name: 'Mathematics' },
-    { icon: Award, name: 'Physics' },
-    { icon: BookOpen, name: 'Biology' },
-    { icon: Globe, name: 'French' },
-    { icon: PenTool, name: 'English' },
+    { icon: FlaskConical, name: 'Chemistry', emoji: '⚗️' },
+    { icon: Calculator, name: 'Mathematics', emoji: '∑' },
+    { icon: Award, name: 'Physics', emoji: '⚛️' },
+    { icon: BookOpen, name: 'Biology', emoji: '🧬' },
+    { icon: Globe, name: 'French', emoji: '🗺️' },
+    { icon: PenTool, name: 'English', emoji: '✍️' },
   ];
 
   const team = [
-    { name: 'JOSEPH AMONOO', role: 'Founder', bio: 'Visionary leader driving academic excellence through innovative education' },
-    { name: 'Simon Azike', role: 'Co-Founder', bio: 'Dedicated to transforming learning experiences for students worldwide' },
-    { name: 'DAMILARE OLADIMEJI', role: 'Team Lead', bio: 'Committed to delivering quality education and student success' }
+    { name: 'Dr. Sarah Mitchell', role: 'Founder & Director', bio: 'PhD in Education, 15+ years experience in academic leadership' },
+    { name: 'James Wilson', role: 'Head of Science', bio: 'Former research scientist, expert in Chemistry and Physics' },
+    { name: 'Emily Chen', role: 'Head of Mathematics', bio: 'Award-winning educator, specializes in advanced mathematics' },
   ];
 
   return (
@@ -166,24 +166,19 @@ const About = () => {
           </motion.div>
 
           <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-0 border border-gray-200">
-            {subjects.map((subject, i) => {
-              const Icon = subject.icon;
-              return (
-                <motion.div
-                  key={subject.name}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.07, duration: 0.5 }}
-                  viewport={{ once: true }}
-                  className="p-8 border-b border-r border-gray-200 last:border-r-0 hover:bg-amber-50/50 transition-colors group text-center"
-                >
-                  <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-[#1A2D44] flex items-center justify-center shadow-sm">
-                    <Icon className="w-7 h-7 text-amber-500" />
-                  </div>
-                  <h3 className="font-bold text-[#1A2D44]">{subject.name}</h3>
-                </motion.div>
-              );
-            })}
+            {subjects.map((subject, i) => (
+              <motion.div
+                key={subject.name}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.07, duration: 0.5 }}
+                viewport={{ once: true }}
+                className="p-8 border-b border-r border-gray-200 last:border-r-0 hover:bg-amber-50/50 transition-colors group text-center"
+              >
+                <div className="text-4xl mb-4">{subject.emoji}</div>
+                <h3 className="font-bold text-[#1A2D44]">{subject.name}</h3>
+              </motion.div>
+            ))}
           </div>
 
           <div className="text-center mt-10">

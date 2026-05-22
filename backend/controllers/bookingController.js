@@ -1,7 +1,6 @@
 const Booking = require('../models/Booking');
 const User = require('../models/User');
 const GoogleFormResponse = require('../models/GoogleFormResponse');
-const twilioService = require('../services/twilioService');
 
 // Subject-based pricing (DHS)
 const SCIENCE_SUBJECTS = ['Chemistry', 'Mathematics', 'Biology', 'Physics', 'GIS', 'Remote Sensing'];
@@ -18,11 +17,11 @@ const calculateFee = (subject, durationHours, isWeekly = false) => {
   const category = SCIENCE_SUBJECTS.includes(subject) ? 'science' : LANGUAGE_SUBJECTS.includes(subject) ? 'language' : 'science';
   const hourlyRate = category === 'science' ? 130 : 120;
   let total = hourlyRate * durationHours;
-  
+
   if (isWeekly) {
     total = total * 0.9; // 10% discount
   }
-  
+
   return Math.round(total);
 };
 
@@ -116,7 +115,7 @@ exports.createStandaloneBooking = async (req, res) => {
 exports.getFeeEstimate = async (req, res) => {
   try {
     const { subject, duration, isWeekly } = req.query;
-    
+
     if (!subject) {
       return res.status(400).json({ error: 'Subject is required' });
     }
@@ -150,10 +149,10 @@ exports.getFeeEstimate = async (req, res) => {
 exports.getAvailableLecturers = async (req, res) => {
   try {
     const { subject } = req.query;
-    
+
     // Find instructors, optionally filtered by expertise matching subject
     let query = { role: 'instructor' };
-    
+
     if (subject) {
       // Try to match expertise or title with subject
       query = {
@@ -276,9 +275,9 @@ exports.googleFormWebhook = async (req, res) => {
 
     // Validate required fields
     if (!name || !email || !phone || !sessionType || !subject || !date || !time) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Missing required fields' 
+        error: 'Missing required fields'
       });
     }
 
@@ -286,9 +285,9 @@ exports.googleFormWebhook = async (req, res) => {
     if (googleFormId && responseId) {
       const existing = await GoogleFormResponse.findOne({ googleFormId, responseId });
       if (existing) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           success: false,
-          error: 'Duplicate submission detected' 
+          error: 'Duplicate submission detected'
         });
       }
     }
@@ -296,25 +295,23 @@ exports.googleFormWebhook = async (req, res) => {
     // Find or create a placeholder user
     let user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      // Create a placeholder user for Google Form submissions
       user = await User.create({
         name,
         email: email.toLowerCase(),
         phone,
-        password: Math.random().toString(36).slice(-8), // Random password
+        password: Math.random().toString(36).slice(-8),
         role: 'student'
       });
       console.log('[GoogleForm] Created placeholder user:', user._id);
     }
 
-    // Find instructor - use preferred if specified, otherwise find any matching
+    // Find instructor
     let instructor;
     if (lecturerPreference === 'preferred' && preferredLecturer) {
       instructor = await User.findById(preferredLecturer);
     }
-    
+
     if (!instructor) {
-      // Find first instructor that matches the subject
       instructor = await User.findOne({
         role: 'instructor',
         $or: [
@@ -324,15 +321,14 @@ exports.googleFormWebhook = async (req, res) => {
       });
     }
 
-    // Fallback: find any instructor
     if (!instructor) {
       instructor = await User.findOne({ role: 'instructor' });
     }
 
     if (!instructor) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'No instructor available' 
+        error: 'No instructor available'
       });
     }
 
@@ -397,9 +393,9 @@ exports.googleFormWebhook = async (req, res) => {
     });
   } catch (error) {
     console.error('[GoogleForm] Webhook error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -417,9 +413,9 @@ exports.getGoogleFormResponses = async (req, res) => {
       responses
     });
   } catch (error) {
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -437,6 +433,7 @@ exports.importGoogleFormResponses = async (req, res) => {
     if (!responses.length) return res.json({ success: true, imported: 0, results: [] });
 
     const results = [];
+    const twilio = require('../services/twilioService');
     for (const resp of responses) {
       try {
         // Find or create user
@@ -504,8 +501,8 @@ exports.importGoogleFormResponses = async (req, res) => {
         await resp.save();
 
         // Send notifications (best-effort)
-        try { await twilioService.sendBookingNotification(booking); } catch (e) { console.warn('Twilio booking notify failed', e.message || e); }
-        try { await twilioService.sendStudentBookingNotification(resp.phone, booking); } catch (e) { console.warn('Twilio student notify failed', e.message || e); }
+        try { await twilio.sendBookingNotification(booking); } catch (e) { console.warn('Twilio booking notify failed', e.message || e); }
+        try { await twilio.sendStudentBookingNotification(resp.phone, booking); } catch (e) { console.warn('Twilio student notify failed', e.message || e); }
 
         results.push({ id: resp._id, success: true, bookingId: booking._id });
       } catch (err) {
