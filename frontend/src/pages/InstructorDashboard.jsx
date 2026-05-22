@@ -1115,6 +1115,7 @@ const GoogleFormResponses = () => {
   const [responses, setResponses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     fetchResponses();
@@ -1143,6 +1144,20 @@ const GoogleFormResponses = () => {
       fetchResponses();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to create booking');
+    }
+  };
+
+  const handleImportPending = async () => {
+    if (!confirm('Import all pending Google Form responses?')) return;
+    setImporting(true);
+    try {
+      const res = await axios.post('/api/bookings/google-form/import');
+      toast.success(res.data.message || 'Import completed');
+      fetchResponses();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Import failed');
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -1202,6 +1217,17 @@ const GoogleFormResponses = () => {
           }`}
         >
           Processed ({responses.filter(r => r.processed).length})
+        </button>
+        <button
+          onClick={handleImportPending}
+          disabled={importing}
+          className={`px-4 py-2 rounded-full text-sm font-medium ml-auto transition-all ${
+            importing
+              ? 'bg-gray-200 text-gray-500'
+              : 'bg-amber-500 text-[#1A2D44] hover:bg-amber-400'
+          }`}
+        >
+          {importing ? 'Importing...' : `Import Pending (${responses.filter(r => !r.processed).length})`}
         </button>
       </div>
 

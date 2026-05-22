@@ -12,6 +12,7 @@ router.get('/instructor', protect, bookingController.getInstructorBookings);
 router.put('/:id', protect, bookingController.updateBookingStatus);
 router.delete('/:id', protect, bookingController.cancelBooking);
 router.post('/google-form', bookingController.googleFormWebhook);
+router.post('/google-form/import', protect, bookingController.importGoogleFormResponses);
 router.get('/google-form/responses', protect, bookingController.getGoogleFormResponses);
 
 module.exports = router;

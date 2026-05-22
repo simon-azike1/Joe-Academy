@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Monitor, Home, BookOpen, CheckCircle, ArrowRight, X } from 'lucide-react';
+import { Monitor, Home, BookOpen, CheckCircle, ArrowRight } from 'lucide-react';
 
 // --- Sub-Components Defined OUTSIDE to prevent re-rendering glitches ---
 
@@ -20,8 +20,6 @@ const Hero = () => (
       </h1>
       <p className="text-gray-400 text-lg max-w-2xl mx-auto">
         Get personalized one-on-one tutoring online or at your home. Expert lecturers in Sciences and Languages.
-        <br className="hidden sm:block" />
-        <span className="text-amber-400">•</span> Quick booking via Google Form also available
       </p>
     </div>
     <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-gray-50 to-transparent" />
@@ -57,63 +55,9 @@ const PricingCards = () => (
   </section>
 );
 
-const GoogleFormView = ({ onClose }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white border border-gray-200">
-    <div className="flex items-center justify-between p-6 border-b border-gray-200">
-      <div>
-        <h2 className="text-2xl font-black text-[#1A2D44]">Book via Google Form</h2>
-        <p className="text-gray-500 text-sm mt-1">Fill out the form below and we will contact you shortly</p>
-      </div>
-      <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600">
-        <X className="w-5 h-5" />
-      </button>
-    </div>
-    <div className="p-6">
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="bg-[#1A2D44] text-white p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5" />
-            <span className="font-bold">Book via Google Form</span>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <p className="text-sm text-gray-600">
-            Fill out the form below to request a tutoring session. Our team will contact you within 24 hours to confirm your booking.
-          </p>
-        </div>
-        <div className="p-4">
-          <iframe
-            src="https://docs.google.com/forms/d/e/1FAIpQLSdBmdEYzWExu90RRbVS1QOJ_LgmDCRBA4IfyEP7Abq_oPhsJg/viewform?embedded=true"
-            width="100%"
-            height="600"
-            frameBorder="0"
-            className="rounded"
-            title="Google Form Booking"
-          >
-            Loading Google Form...
-          </iframe>
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start gap-2">
-              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="text-sm text-blue-800">
-                After submitting the form, you'll receive a confirmation email within 24 hours. Our team will contact you to confirm your booking details and arrange payment.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </motion.div>
-);
+// Google Form iframe removed — in-app booking used exclusively
 
-const Step1 = ({ onSelectService, onShowGoogleForm }) => (
+const Step1 = ({ onSelectService }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
     <div className="text-center mb-10">
       <h2 className="text-3xl font-black text-[#1A2D44] mb-3">Choose Your Service</h2>
@@ -136,11 +80,7 @@ const Step1 = ({ onSelectService, onShowGoogleForm }) => (
       ))}
     </div>
     <div className="text-center mt-10">
-      <p className="text-gray-400 text-sm mb-3">Prefer to use Google Form?</p>
-      <button onClick={onShowGoogleForm} className="inline-flex items-center gap-2 text-amber-600 font-semibold text-sm hover:text-amber-800 transition-colors">
-        <BookOpen className="w-4 h-4" />
-        Book via Google Form instead
-      </button>
+      <p className="text-gray-400 text-sm mb-3">Book securely using the in-app form for fastest processing.</p>
     </div>
   </motion.div>
 );
@@ -258,12 +198,12 @@ const Step3 = ({ formData, setFormData, setStep, times, lecturers, handleChange 
             <span className="text-sm text-gray-600">Match me with any available lecturer</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="radio" checked={formData.lecturerPreference === 'specific'} onChange={() => setFormData(prev => ({ ...prev, lecturerPreference: 'specific' }))} className="w-4 h-4 text-amber-500" />
+            <input type="radio" checked={formData.lecturerPreference === 'preferred'} onChange={() => setFormData(prev => ({ ...prev, lecturerPreference: 'preferred' }))} className="w-4 h-4 text-amber-500" />
             <span className="text-sm text-gray-600">I have a preferred lecturer</span>
           </label>
         </div>
 
-        {formData.lecturerPreference === 'specific' && (
+        {formData.lecturerPreference === 'preferred' && (
           <div className="space-y-3">
             {lecturers.map((lecturer) => (
               <label key={lecturer._id} className={`flex items-center gap-4 p-4 border cursor-pointer transition-all ${formData.instructorId === lecturer._id ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-amber-300'}`}>
@@ -380,7 +320,6 @@ const BookNow = () => {
   const [serviceType, setServiceType] = useState('');
   const [lecturers, setLecturers] = useState([]);
   const [submitting, setSubmitting] = useState(false);
-  const [showGoogleForm, setShowGoogleForm] = useState(false);
   const [formData, setFormData] = useState({
     instructorId: '',
     lecturerPreference: 'match',
@@ -403,8 +342,9 @@ const BookNow = () => {
   const times = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     axios.get('/api/bookings/lecturers').then(r => setLecturers(r.data.lecturers || [])).catch(() => {});
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!formData.subject) return;
@@ -445,11 +385,8 @@ const BookNow = () => {
 
       <section className="py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          {showGoogleForm ? (
-            <GoogleFormView onClose={() => setShowGoogleForm(false)} />
-          ) : (
-            <div>
-              {step === 1 && <Step1 onSelectService={handleServiceSelect} onShowGoogleForm={() => setShowGoogleForm(true)} />}
+          <div>
+            {step === 1 && <Step1 onSelectService={handleServiceSelect} />}
               {step >= 2 && (
                 <>
                   <Progress step={step} />
@@ -471,7 +408,7 @@ const BookNow = () => {
                         <div className="bg-white border border-gray-200 p-6">
                           <h3 className="font-bold text-[#1A2D44] mb-3 flex items-center gap-2"><BookOpen className="w-5 h-5 text-amber-500" /> Prefer Google Form?</h3>
                           <p className="text-gray-500 text-sm mb-4">If you prefer, you can also book via our Google Form. The same great service, your preferred way.</p>
-                          <button onClick={() => setShowGoogleForm(true)} className="w-full border border-amber-500 text-amber-600 px-4 py-3 font-bold text-sm uppercase tracking-wide hover:bg-amber-50 transition-colors">Book via Google Form</button>
+                          <button disabled className="w-full border border-amber-300 text-gray-400 px-4 py-3 font-bold text-sm uppercase tracking-wide bg-gray-50">Google Form (disabled)</button>
                         </div>
                       </div>
                     </div>
@@ -479,7 +416,6 @@ const BookNow = () => {
                 </>
               )}
             </div>
-          )}
         </div>
       </section>
     </div>

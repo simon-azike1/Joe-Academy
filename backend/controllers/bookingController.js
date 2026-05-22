@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const User = require('../models/User');
 const GoogleFormResponse = require('../models/GoogleFormResponse');
+const twilioService = require('../services/twilioService');
 
 // Subject-based pricing (DHS)
 const SCIENCE_SUBJECTS = ['Chemistry', 'Mathematics', 'Biology', 'Physics', 'GIS', 'Remote Sensing'];
@@ -420,5 +421,102 @@ exports.getGoogleFormResponses = async (req, res) => {
       success: false,
       error: error.message 
     });
+  }
+};
+
+/**
+ * Import unprocessed Google Form responses into Booking records
+ * Protected route — run by admin/instructor
+ */
+exports.importGoogleFormResponses = async (req, res) => {
+  try {
+    const { ids } = req.body || {};
+    const query = ids && Array.isArray(ids) && ids.length ? { _id: { $in: ids } } : { processed: false };
+
+    const responses = await GoogleFormResponse.find(query).limit(200).sort({ submittedAt: 1 });
+    if (!responses.length) return res.json({ success: true, imported: 0, results: [] });
+
+    const results = [];
+    for (const resp of responses) {
+      try {
+        // Find or create user
+        let user = await User.findOne({ email: resp.email?.toLowerCase() });
+        if (!user) {
+          user = await User.create({
+            name: resp.name,
+            email: resp.email?.toLowerCase(),
+            phone: resp.phone,
+            password: Math.random().toString(36).slice(-8),
+            role: 'student'
+          });
+        }
+
+        // Determine instructor
+        let instructor = null;
+        if (resp.lecturerPreference === 'preferred' && resp.preferredLecturer) {
+          instructor = await User.findOne({ $or: [{ _id: resp.preferredLecturer }, { name: resp.preferredLecturer }], role: 'instructor' });
+        }
+        if (!instructor) {
+          instructor = await User.findOne({ role: 'instructor', $or: [
+            { expertise: { $regex: resp.subject, $options: 'i' } },
+            { title: { $regex: resp.subject, $options: 'i' } },
+            { bio: { $regex: resp.subject, $options: 'i' } }
+          ] });
+        }
+        if (!instructor) {
+          instructor = await User.findOne({ role: 'instructor' });
+        }
+
+        if (!instructor) {
+          results.push({ id: resp._id, success: false, error: 'No instructor available' });
+          continue;
+        }
+
+        const durationHours = Number(resp.duration) || 1;
+        const isWeekly = (resp.frequency || '').toString().toLowerCase().includes('weekly');
+        const fee = calculateFee(resp.subject, durationHours, isWeekly);
+
+        const booking = await Booking.create({
+          userId: user._id,
+          instructorId: instructor._id,
+          date: resp.date ? new Date(resp.date) : new Date(),
+          time: resp.time || '09:00',
+          type: (resp.sessionType || '').toLowerCase().includes('home') ? 'in-person' : 'virtual',
+          subject: resp.subject,
+          duration: durationHours * 60,
+          isWeekly,
+          topic: `${resp.subject} Session - ${resp.name}`,
+          notes: resp.notes || `Imported from Google Form ${resp.googleFormId || ''}`,
+          address: resp.address,
+          price: fee,
+          totalFee: fee,
+          studentName: resp.name,
+          studentEmail: resp.email,
+          studentPhone: resp.phone,
+          bookingSource: 'google-form',
+          status: 'pending',
+          paymentStatus: 'pending'
+        });
+
+        resp.processed = true;
+        resp.processedAt = new Date();
+        resp.bookingId = booking._id;
+        await resp.save();
+
+        // Send notifications (best-effort)
+        try { await twilioService.sendBookingNotification(booking); } catch (e) { console.warn('Twilio booking notify failed', e.message || e); }
+        try { await twilioService.sendStudentBookingNotification(resp.phone, booking); } catch (e) { console.warn('Twilio student notify failed', e.message || e); }
+
+        results.push({ id: resp._id, success: true, bookingId: booking._id });
+      } catch (err) {
+        console.error('Import error for response', resp._id, err);
+        results.push({ id: resp._id, success: false, error: err.message });
+      }
+    }
+
+    res.json({ success: true, imported: results.filter(r => r.success).length, results });
+  } catch (error) {
+    console.error('Import Google Form responses error', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
