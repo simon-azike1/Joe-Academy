@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.get(`${API_URL}/auth/me`);
       setUser(response.data.user);
     } catch (error) {
+      console.error('[Auth] Fetch user error:', error.message || error);
       Cookies.remove('token');
       delete axios.defaults.headers.common['Authorization'];
     } finally {
@@ -42,23 +43,21 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await axios.post(`${API_URL}/auth/login`, { email, password });
-    const { token, user: userData } = response.data;
-    
+    const { token, user: userData } = response.data || {};
+    if (!token) throw new Error('No token received');
     Cookies.set('token', token, { expires: 7 });
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    setUser(userData);
-    
+    setUser(userData || null);
     return userData;
   };
 
   const register = async (name, email, password, role = 'student') => {
     const response = await axios.post(`${API_URL}/auth/register`, { name, email, password, role });
-    const { token, user: userData } = response.data;
-    
+    const { token, user: userData } = response.data || {};
+    if (!token) throw new Error('No token received');
     Cookies.set('token', token, { expires: 7 });
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    setUser(userData);
-    
+    setUser(userData || null);
     return userData;
   };
 
